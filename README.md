@@ -19,7 +19,7 @@ This is a simple bank management system implemented in Python. It allows users t
 
 ### Usage
 
-1. Clone the repository:
+## 1. Clone the repository:
 
    ```bash
    git clone https://github.com/your-username/bank-management-system-python.git
