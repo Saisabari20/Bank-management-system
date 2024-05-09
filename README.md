@@ -23,9 +23,3 @@ This is a simple bank management system implemented in Python. It allows users t
 
    ```bash
    git clone https://github.com/your-username/bank-management-system-python.git
-
-## 2. Navigate to the project directory:
-cd bank-management-system-python
-
-## 3. Run the program:
-python bank_management_system.py
