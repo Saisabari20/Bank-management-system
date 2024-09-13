@@ -13,7 +13,7 @@ This is a simple Python-based Bank Management System that allows users to create
 
 ## Requirements
 
-- Python 3.x
+- Python 3.6+
 - SQLite (comes built-in with Python)
 
 ## Setup and Installation
