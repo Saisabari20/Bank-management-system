@@ -1,108 +1,174 @@
+import sqlite3
+
+# Connect to the database
+conn = sqlite3.connect('bank.db')
+cursor = conn.cursor()
+
+# Create table if it doesn't exist
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS accounts (
+    account_number INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    amount INTEGER NOT NULL
+)
+''')
+conn.commit()
+
 class Account:
-    account_number = 0
-    name = ''
-    amount = 0
+    def __init__(self):
+        self.account_number = 0
+        self.name = ''
+        self.amount = 0
 
     def createAccount(self):
-        self.account_number = int(input("Enter the account no : "))
-        self.name = input("Enter the account holder name : ")
-        self.amount = int(input("Enter The Initial amount(>=500):"))
+        try:
+            self.account_number = int(input("Enter the account no (at least 7 digits): "))
+            if len(str(self.account_number)) < 7:
+                raise ValueError("Account number must be at least 7 digits long.")
+            self.name = input("Enter the account holder name: ")
+            self.amount = int(input("Enter The Initial amount (>=500): "))
+
+            # Ensure the amount is valid
+            if self.amount < 500:
+                raise ValueError("Initial amount should be 500 or more.")
+
+            # Insert the new account into the database
+            cursor.execute("INSERT INTO accounts (account_number, name, amount) VALUES (?, ?, ?)",
+                           (self.account_number, self.name, self.amount))
+            conn.commit()
+            print("\n\nAccount created successfully!")
+        except sqlite3.IntegrityError:
+            print("Error: Account number already exists.")
+        except ValueError as ve:
+            print(f"Invalid input: {ve}")
 
     def showAccount(self):
-        print("Account Number : ", self.account_number)
-        print("Account Holder Name : ", self.name)
-        print("Balance : ", self.amount)
+        print(f"Account Number: {self.account_number}")
+        print(f"Account Holder Name: {self.name}")
+        print(f"Balance: {self.amount}")
 
     def modifyAccount(self):
-        print("Account Number : ", self.account_number)
-        self.name = input("Modify Account Holder Name :")
-        self.amount = int(input("Modify Balance :"))
+        try:
+            print(f"Account Number: {self.account_number}")
+            old_name = self.name
+            new_name = input("Modify Account Holder Name: ")
+
+            # Check if the new name is different from the old name
+            if new_name == old_name:
+                raise ValueError("New name is the same as the old name. Please try a different name.")
+
+            # Update the name in the database
+            self.name = new_name
+            cursor.execute("UPDATE accounts SET name = ? WHERE account_number = ?",
+                           (self.name, self.account_number))
+            conn.commit()
+            print("Account updated successfully!")
+        except ValueError as ve:
+            print(ve)
 
     def depositAmount(self, amount):
         self.amount += amount
 
+        # Update the balance in the database
+        cursor.execute("UPDATE accounts SET amount = ? WHERE account_number = ?",
+                       (self.amount, self.account_number))
+        conn.commit()
+
     def withdrawAmount(self, amount):
-        self.amount -= amount
+        if amount <= self.amount:
+            self.amount -= amount
+
+            # Update the balance in the database
+            cursor.execute("UPDATE accounts SET amount = ? WHERE account_number = ?",
+                           (self.amount, self.account_number))
+            conn.commit()
+            print("Amount withdrawn successfully!")
+        else:
+            print("Error: Insufficient balance.")
+
+
+def writeAccount():
+    account = Account()
+    account.createAccount()
+
+
+def displayAll():
+    cursor.execute("SELECT * FROM accounts")
+    rows = cursor.fetchall()
+    if rows:
+        for row in rows:
+            print(f"\n\nAccount Number: {row[0]}\nAccount Holder Name: {row[1]}\nBalance: {row[2]}")
+    else:
+        print("No records to display.")
+
+
+def displaySp(num):
+    cursor.execute("SELECT * FROM accounts WHERE account_number = ?", (num,))
+    row = cursor.fetchone()
+    if row:
+        print(f"Your account Balance is = {row[2]}")
+    else:
+        print("No existing record with this number.")
+
+
+def depositAndWithdraw(num1, num2):
+    cursor.execute("SELECT * FROM accounts WHERE account_number = ?", (num1,))
+    row = cursor.fetchone()
+    if row:
+        account = Account()
+        account.account_number = row[0]
+        account.name = row[1]
+        account.amount = row[2]
+
+        if num2 == 1:
+            amount = int(input("Enter the amount to deposit: "))
+            account.depositAmount(amount)
+            print("Your account is updated.")
+        elif num2 == 2:
+            amount = int(input("Enter the amount to withdraw: "))
+            account.withdrawAmount(amount)
+    else:
+        print("No existing record with this account number.")
+
+
+def deleteAccount(num):
+    cursor.execute("SELECT * FROM accounts WHERE account_number = ?", (num,))
+    row = cursor.fetchone()
+    if row:
+        cursor.execute("DELETE FROM accounts WHERE account_number = ?", (num,))
+        conn.commit()
+        print("Your account has been deleted.")
+    else:
+        print("Error: Account does not exist.")
+
+
+def modifyAccount(num):
+    cursor.execute("SELECT * FROM accounts WHERE account_number = ?", (num,))
+    row = cursor.fetchone()
+    if row:
+        account = Account()
+        account.account_number = row[0]
+        account.name = row[1]
+        account.amount = row[2]
+        account.modifyAccount()
+    else:
+        print("No existing record with this account number.")
 
 
 def intro():
     print("\t\t\t\t**********************")
     print("\t\t\t\tBANK MANAGEMENT SYSTEM")
     print("\t\t\t\t**********************")
-
-    input("Press Enter To Contiune: ")
-
-
-def writeAccount(account_list):
-    account = Account()
-    account.createAccount()
-    for existing_account in account_list:
-        if existing_account.account_number == account.account_number:
-            print("Account number already exists. Please choose a different account number.")
-            return
-    account_list.append(account)
+    input("Press Enter to continue.")
 
 
-def displayAll(account_list):
-    if len(account_list) > 0:
-        for account in account_list:
-            account.showAccount()
-    else:
-        print("No records to display")
-
-
-def displaySp(account_list, num):
-    found = False
-    for account in account_list:
-        if account.account_number == num:
-            print("Your account Balance is = ", account.amount)
-            found = True
-            break
-    if not found:
-        print("No existing record with this number")
-
-
-def depositAndWithdraw(account_list, num1, num2):
-    found = False
-    for account in account_list:
-        if account.account_number == num1:
-            found = True
-            if num2 == 1:
-                amount = int(input("Enter the amount to deposit : "))
-                account.depositAmount(amount)
-                print("Your account is updated")
-            elif num2 == 2:
-                amount = int(input("Enter the amount to withdraw : "))
-                if amount <= account.amount:
-                    account.withdrawAmount(amount)
-                else:
-                    print("You cannot withdraw a larger amount")
-            break
-    if not found:
-        print("No existing record with this account number")
-
-
-def deleteAccount(account_list, num):
-    account_list[:] = [account for account in account_list if account.account_number != num]
-    print("Your account is Deleted")
-
-
-def modifyAccount(account_list, num):
-    for account in account_list:
-        if account.account_number == num:
-            account.modifyAccount()
-        else:
-            print("No existing record with this account number")
-
-
-# start of the program
+# Start of the program
 ch = ''
 num = 0
 intro()
-account_list = []
 
 while ch != '8':
-    print("\tMAIN MENU")
+    print("\t\n\nMAIN MENU")
     print("\t1. NEW ACCOUNT")
     print("\t2. DEPOSIT AMOUNT")
     print("\t3. WITHDRAW AMOUNT")
@@ -113,27 +179,34 @@ while ch != '8':
     print("\t8. EXIT")
     print("\tSelect Your Option (1-8) ")
     ch = input("\n\nEnter your choice:")
-    if ch == '1':
-        writeAccount(account_list)
-    elif ch == '2':
-        num = int(input("\tEnter The account No. : "))
-        depositAndWithdraw(account_list, num, 1)
-    elif ch == '3':
-        num = int(input("\tEnter The account No. : "))
-        depositAndWithdraw(account_list, num, 2)
-    elif ch == '4':
-        num = int(input("\tEnter The account No. : "))
-        displaySp(account_list, num)
-    elif ch == '5':
-        displayAll(account_list)
-    elif ch == '6':
-        num = int(input("\tEnter The account No. : "))
-        deleteAccount(account_list, num)
-    elif ch == '7':
-        num = int(input("\tEnter The account No. : "))
-        modifyAccount(account_list, num)
-    elif ch == '8':
-        print("\tThanks for using bank management system")
-        break
-    else:
-        print("Invalid choice")
+    try:
+        if ch == '1':
+            writeAccount()
+        elif ch == '2':
+            num = int(input("\tEnter The account No: "))
+            depositAndWithdraw(num, 1)
+        elif ch == '3':
+            num = int(input("\tEnter The account No: "))
+            depositAndWithdraw(num, 2)
+        elif ch == '4':
+            num = int(input("\tEnter The account No: "))
+            displaySp(num)
+        elif ch == '5':
+            displayAll()
+        elif ch == '6':
+            num = int(input("\tEnter The account No: "))
+            deleteAccount(num)
+        elif ch == '7':
+            num = int(input("\tEnter The account No: "))
+            modifyAccount(num)
+        elif ch == '8':
+            print("\tThanks for using the bank management system.")
+            break
+        else:
+            print("Invalid choice.")
+    except ValueError:
+        print("Invalid input. Please enter a valid number.")
+
+# Close the database connection and cursor when done
+cursor.close()
+conn.close()
