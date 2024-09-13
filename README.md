@@ -1,25 +1,24 @@
-# Bank Management System (Python)
+# Bank Management System
 
-This is a simple bank management system implemented in Python. It allows users to create accounts, deposit and withdraw money, check balances, and perform other basic banking operations.
+This is a simple Python-based Bank Management System that allows users to create accounts, deposit, withdraw, view account balances, and modify account information. The system uses SQLite as its database to store and manage account data.
 
 ## Features
 
-- Create a new account
-- Deposit and withdraw money
-- Check balance
-- List all accounts
-- Close an account
-- Modify account details
+- Create a new account with an initial deposit (minimum of 500 units).
+- Deposit and withdraw money from an account.
+- Check account balance.
+- View all account holders.
+- Modify account information.
+- Delete an account.
 
-## Getting Started
-
-### Prerequisites
+## Requirements
 
 - Python 3.x
+- SQLite (comes built-in with Python)
 
-### Usage
+## Setup and Installation
 
-## 1. Clone the repository:
+1. Clone the repository to your local machine:
 
    ```bash
-   git clone https://github.com/your-username/bank-management-system-python.git
+   git clone https://github.com/your-username/Bank-Management-System.git
