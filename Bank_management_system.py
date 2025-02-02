@@ -1,10 +1,8 @@
 import sqlite3
 
-# Connect to the database
 conn = sqlite3.connect('bank.db')
 cursor = conn.cursor()
 
-# Create table if it doesn't exist
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS accounts (
     account_number INTEGER PRIMARY KEY,
@@ -28,11 +26,9 @@ class Account:
             self.name = input("Enter the account holder name: ")
             self.amount = int(input("Enter The Initial amount (>=500): "))
 
-            # Ensure the amount is valid
             if self.amount < 500:
                 raise ValueError("Initial amount should be 500 or more.")
 
-            # Insert the new account into the database
             cursor.execute("INSERT INTO accounts (account_number, name, amount) VALUES (?, ?, ?)",
                            (self.account_number, self.name, self.amount))
             conn.commit()
@@ -53,11 +49,9 @@ class Account:
             old_name = self.name
             new_name = input("Modify Account Holder Name: ")
 
-            # Check if the new name is different from the old name
             if new_name == old_name:
                 raise ValueError("New name is the same as the old name. Please try a different name.")
 
-            # Update the name in the database
             self.name = new_name
             cursor.execute("UPDATE accounts SET name = ? WHERE account_number = ?",
                            (self.name, self.account_number))
@@ -69,7 +63,6 @@ class Account:
     def depositAmount(self, amount):
         self.amount += amount
 
-        # Update the balance in the database
         cursor.execute("UPDATE accounts SET amount = ? WHERE account_number = ?",
                        (self.amount, self.account_number))
         conn.commit()
@@ -78,7 +71,6 @@ class Account:
         if amount <= self.amount:
             self.amount -= amount
 
-            # Update the balance in the database
             cursor.execute("UPDATE accounts SET amount = ? WHERE account_number = ?",
                            (self.amount, self.account_number))
             conn.commit()
@@ -161,8 +153,7 @@ def intro():
     print("\t\t\t\t**********************")
     input("Press Enter to continue.")
 
-
-# Start of the program
+# Start
 ch = ''
 num = 0
 intro()
@@ -207,6 +198,5 @@ while ch != '8':
     except ValueError:
         print("Invalid input. Please enter a valid number.")
 
-# Close the database connection and cursor when done
 cursor.close()
 conn.close()
